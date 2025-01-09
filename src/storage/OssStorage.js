@@ -26,7 +26,7 @@ class OssStorage extends StorageInterface {
       logger.info(`File saved to OSS: ${ossPath}`);
       return filename;
     } catch (error) {
-      logger.error(`Error saving file to OSS: ${error.message}`);
+      logger.error(`Error saving file to OSS: `, error);
       throw error;
     }
   }
@@ -42,7 +42,7 @@ class OssStorage extends StorageInterface {
       });
       return url;
     } catch (error) {
-      logger.error(`Error generating URL: ${error.message}`);
+      logger.error(`Error generating URL: `, error);
       throw error;
     }
   }

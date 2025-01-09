@@ -30,7 +30,7 @@ class LocalStorage extends StorageInterface {
       logger.info(`File saved: ${filepath})`);
       return filename;
     } catch (error) {
-      logger.error("Failed to save file", { error });
+      logger.error("Failed to save file: ", error);
       throw error;
     }
   }
@@ -53,7 +53,7 @@ class LocalStorage extends StorageInterface {
       logger.info(`URL generated successfully. Token: ${token}`);
       return `/api/file/${token}`;
     } catch (error) {
-      logger.error("File not found while generating URL", { error });
+      logger.error("File not found while generating URL: ", error);
       throw new Error("File not found");
     }
   }
@@ -66,7 +66,7 @@ class LocalStorage extends StorageInterface {
       logger.info(decoded);
       return decoded;
     } catch (error) {
-      logger.error("Token verification failed", { error });
+      logger.error("Token verification failed: ", error);
       throw new Error("Invalid or expired token");
     }
   }
