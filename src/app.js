@@ -3,6 +3,7 @@ const uploadRoutes = require("./routes/upload");
 const adminRoutes = require("./routes/admin");
 const fileRoutes = require("./routes/file");
 const { logger, requestLogger } = require("./config/logger");
+const { apiKeyAuth } = require("./middleware/auth");
 const config = require("dotenv").config();
 
 const app = express();
@@ -20,6 +21,9 @@ app.use((err, req, res, next) => {
 });
 
 app.use(express.json());
+
+// 添加API认证中间件
+app.use("/api", apiKeyAuth);
 
 app.use("/api", uploadRoutes);
 app.use("/api/admin", adminRoutes);
