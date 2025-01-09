@@ -9,14 +9,6 @@ class StorageInterface {
     throw new Error("Method not implemented");
   }
 
-  async downloadFile(filename) {
-    throw new Error("Method not implemented");
-  }
-
-  async deleteFile(filename) {
-    throw new Error("Method not implemented");
-  }
-
   getIsTemp() {
     const config = ConfigManager.getInstance();
     return config.getConfig().tempStorage;

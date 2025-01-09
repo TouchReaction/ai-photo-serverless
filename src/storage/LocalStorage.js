@@ -2,15 +2,15 @@ const StorageInterface = require("./StorageInterface");
 const path = require("path");
 const fs = require("fs").promises;
 const jwt = require("jsonwebtoken");
+const { logger } = require("../config/logger");
 const ConfigManager = require("../config/config");
-const { logger } = require('../config/logger');
 
 class LocalStorage extends StorageInterface {
   constructor() {
     super();
-    this.permanentDir = path.join(__dirname, "../../uploads/permanent");
-    this.tempDir = path.join(__dirname, "../../uploads/temp");
-    this.jwtSecret = process.env.JWT_SECRET || "your-secret-key";
+    this.permanentDir = path.resolve(process.env.PERMANENT_DIR);
+    this.tempDir = path.resolve(process.env.TEMP_DIR);
+    this.jwtSecret = process.env.JWT_SECRET;
     this.initDirectories();
   }
 
@@ -22,21 +22,12 @@ class LocalStorage extends StorageInterface {
   async saveFile(file) {
     const isTemp = this.getIsTemp();
     const targetDir = isTemp ? this.tempDir : this.permanentDir;
-    const filename = isTemp ? 'temp.jpg' : `${Date.now()}-${file.originalname}`;
+    const filename = isTemp ? "temp.jpg" : file.originalname;
     const filepath = path.join(targetDir, filename);
-    
-    try {
-      if (isTemp) {
-        logger.info('Cleaning temporary storage directory');
-        const files = await fs.readdir(this.tempDir);
-        for (const file of files) {
-          await fs.unlink(path.join(this.tempDir, file));
-          logger.debug(`Deleted temp file: ${file}`);
-        }
-      }
 
+    try {
       await fs.writeFile(filepath, file.buffer);
-      logger.info(`File saved successfully: ${filename} (${isTemp ? 'temporary' : 'permanent'})`);
+      logger.info(`File saved: ${filepath}`);
       return filename;
     } catch (error) {
       logger.error(`Error saving file: ${error.message}`, { error });
@@ -45,14 +36,20 @@ class LocalStorage extends StorageInterface {
   }
 
   async getFileUrl(filename) {
-    try {
-      const url = await super.getFileUrl(filename);
-      logger.info(`Generated URL for file: ${filename}`);
-      return url;
-    } catch (error) {
-      logger.error(`Error generating URL for file ${filename}: ${error.message}`);
-      throw error;
-    }
+    const config = ConfigManager.getInstance();
+    const { urlExpiration = 3600 } = config.getConfig();
+    const isTemp = this.getIsTemp();
+    const filepath = path.join(
+      isTemp ? this.tempDir : this.permanentDir,
+      filename
+    );
+
+    const token = jwt.sign(
+      { filepath, exp: Math.floor(Date.now() / 1000) + urlExpiration },
+      this.jwtSecret
+    );
+
+    return `/api/file/${token}`;
   }
 
   async verifyToken(token) {
@@ -61,34 +58,6 @@ class LocalStorage extends StorageInterface {
     } catch (error) {
       throw new Error("Invalid or expired token");
     }
-  }
-
-  async getFilePath(filename) {
-    const permanentPath = path.join(this.permanentDir, filename);
-    const tempPath = path.join(this.tempDir, filename);
-
-    if (
-      await fs
-        .access(permanentPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      return permanentPath;
-    }
-    if (
-      await fs
-        .access(tempPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      return tempPath;
-    }
-    throw new Error("File not found");
-  }
-
-  async deleteFile(filename) {
-    const filepath = path.join(this.permanentDir, filename);
-    await fs.unlink(filepath);
   }
 }
 

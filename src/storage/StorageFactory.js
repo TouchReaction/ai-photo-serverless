@@ -13,13 +13,10 @@ class StorageFactory {
   }
 
   static createStorage() {
-    switch (this.currentStrategy) {
-      case "local":
-        return new LocalStorage();
-      case "oss":
-        return new OssStorage();
-      default:
-        throw new Error("Invalid storage strategy");
+    if (this.currentStrategy === "oss") {
+      return new OssStorage();
+    } else {
+      return new LocalStorage();
     }
   }
 

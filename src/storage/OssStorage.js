@@ -1,5 +1,6 @@
 const StorageInterface = require("./StorageInterface");
 const OSS = require("ali-oss");
+const { logger } = require("../config/logger");
 
 class OssStorage extends StorageInterface {
   constructor() {
@@ -16,33 +17,30 @@ class OssStorage extends StorageInterface {
 
   async saveFile(file) {
     const isTemp = this.getIsTemp();
-    const filename = isTemp ? 'temp.jpg' : `${Date.now()}-${file.originalname}`;
     const path = isTemp ? this.tempPath : this.permanentPath;
-    
-    if (isTemp) {
-      // 删除旧的临时文件
-      const list = await this.client.list({ prefix: this.tempPath });
-      for (const obj of list.objects || []) {
-        await this.client.delete(obj.name);
-      }
-    }
+    const filename = isTemp ? "temp.jpg" : file.originalname;
+    const ossPath = `${path}${filename}`;
 
-    await this.client.put(`${path}${filename}`, file.buffer);
-    return filename;
+    try {
+      await this.client.put(ossPath, file.buffer);
+      logger.info(`File saved to OSS: ${ossPath}`);
+      return filename;
+    } catch (error) {
+      logger.error(`Error saving file to OSS: ${error.message}`);
+      throw error;
+    }
   }
 
   async getFileUrl(filename) {
-    const url = await this.client.generatePresignedUrl(filename);
-    return url;
-  }
-
-  async downloadFile(filename) {
-    const result = await this.client.get(filename);
-    return result.content;
-  }
-
-  async deleteFile(filename) {
-    await this.client.delete(filename);
+    const isTemp = this.getIsTemp();
+    const path = isTemp ? this.tempPath : this.permanentPath;
+    try {
+      const url = await this.client.generatePresignedUrl(`${path}${filename}`);
+      return url;
+    } catch (error) {
+      logger.error(`Error generating URL: ${error.message}`);
+      throw error;
+    }
   }
 }
 

@@ -2,30 +2,20 @@ const express = require("express");
 const router = express.Router();
 const StorageFactory = require("../storage/StorageFactory");
 const ConfigManager = require("../config/config");
-const { logger } = require('../config/logger');
 
 // 更改存储策略
 router.post("/storage/strategy", (req, res) => {
   try {
     const { strategy } = req.body;
     StorageFactory.setStrategy(strategy);
-
-    // 同时更新配置
     const config = ConfigManager.getInstance();
     config.updateConfig({ storageStrategy: strategy });
-
-    logger.info(`Storage strategy changed to: ${strategy}`);
-
     res.json({
       success: true,
       message: `Storage strategy changed to ${strategy}`,
     });
   } catch (error) {
-    logger.error(`Error changing storage strategy: ${error.message}`);
-    res.status(400).json({
-      success: false,
-      error: error.message,
-    });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
@@ -35,17 +25,13 @@ router.post("/storage/temp", (req, res) => {
     const { tempStorage } = req.body;
     const config = ConfigManager.getInstance();
     config.updateConfig({ tempStorage: Boolean(tempStorage) });
-
     res.json({
       success: true,
       message: `Temp storage set to ${tempStorage}`,
       config: config.getConfig(),
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
-    });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
@@ -53,41 +39,31 @@ router.post("/storage/temp", (req, res) => {
 router.get("/config", (req, res) => {
   try {
     const config = ConfigManager.getInstance();
-    res.json({
-      success: true,
-      config: config.getConfig(),
-    });
+    res.json({ success: true, config: config.getConfig() });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
-    });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 // 设置URL过期时间
-router.post('/url-expiration', (req, res) => {
-    try {
-        const { expiration } = req.body;
-        const config = ConfigManager.getInstance();
-        
-        if (!Number.isInteger(expiration) || expiration <= 0) {
-            throw new Error('Expiration must be a positive integer');
-        }
+router.post("/url-expiration", (req, res) => {
+  try {
+    const { expiration } = req.body;
+    const config = ConfigManager.getInstance();
 
-        config.updateConfig({ urlExpiration: expiration });
-        
-        res.json({ 
-            success: true, 
-            message: `URL expiration set to ${expiration} seconds`,
-            config: config.getConfig()
-        });
-    } catch (error) {
-        res.status(400).json({ 
-            success: false, 
-            error: error.message 
-        });
+    if (!Number.isInteger(expiration) || expiration <= 0) {
+      throw new Error("Expiration must be a positive integer");
     }
+
+    config.updateConfig({ urlExpiration: expiration });
+    res.json({
+      success: true,
+      message: `URL expiration set to ${expiration} seconds`,
+      config: config.getConfig(),
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
 
 module.exports = router;
