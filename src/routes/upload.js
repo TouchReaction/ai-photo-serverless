@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const StorageFactory = require("../storage/StorageFactory");
 const ConfigManager = require("../config/config");
+const { logger } = require("../config/logger");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -18,6 +19,12 @@ function getFullUrl(req, url) {
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
     const storage = StorageFactory.getInstance();
+    if (!req.file.originalname.endsWith(".jpg")) {
+      logger.error(`不支持的文件：${req.file.originalname}`);
+      return res
+        .status(400)
+        .json({ success: false, error: "Not support file type" });
+    }
     const filename = await storage.saveFile(req.file);
     const url = getFullUrl(req, await storage.getFileUrl(filename));
 
