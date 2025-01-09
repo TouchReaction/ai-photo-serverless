@@ -10,6 +10,7 @@ describe("Storage API Tests", () => {
   const testImagePath = path.join(testFixturesDir, "test.jpg");
   const uploadsDir = path.resolve("uploads");
   const config = ConfigManager.getInstance();
+  const apiKey = process.env.API_KEY;
 
   async function removeDir(dir) {
     try {
@@ -39,10 +40,44 @@ describe("Storage API Tests", () => {
     config.updateConfig({ tempStorage: false });
   });
 
+  describe("API Authentication", () => {
+    test("should reject request without API key", async () => {
+      const response = await request(app)
+        .get("/api/url/test.jpg");
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe("API key is required");
+    });
+
+    test("should reject request with invalid API key", async () => {
+      const response = await request(app)
+        .get("/api/url/test.jpg")
+        .set("x-api-key", "invalid-key");
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe("Invalid API key");
+    });
+
+    test("should accept request with valid API key", async () => {
+      const response = await request(app)
+        .get("/api/url/test.jpg")
+        .set("x-api-key", apiKey);
+
+      // 即使文件不存在，但认证应该是成功的
+      // 所以我们期望得到404而不是401
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe("File not found");
+    });
+  });
+
   describe("Permanent Storage Mode", () => {
     test("should upload file successfully", async () => {
       const response = await request(app)
         .post("/api/upload")
+        .set("x-api-key", apiKey)
         .attach("image", testImagePath);
 
       expect(response.status).toBe(200);
@@ -53,17 +88,22 @@ describe("Storage API Tests", () => {
     test("should download uploaded file", async () => {
       const uploadResponse = await request(app)
         .post("/api/upload")
+        .set("x-api-key", apiKey)
         .attach("image", testImagePath);
 
       const token = uploadResponse.body.url.split("/").pop();
-      const downloadResponse = await request(app).get(`/api/file/${token}`);
+      const downloadResponse = await request(app)
+        .get(`/api/file/${token}`)
+        .set("x-api-key", apiKey);
 
       expect(downloadResponse.status).toBe(200);
       expect(downloadResponse.headers["content-type"]).toMatch(/^image\//);
     });
 
     test("should return 404 for non-existent file", async () => {
-      const response = await request(app).get("/api/url/non-existent.jpg");
+      const response = await request(app)
+        .get("/api/url/non-existent.jpg")
+        .set("x-api-key", apiKey);
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
@@ -79,7 +119,9 @@ describe("Storage API Tests", () => {
         process.env.JWT_SECRET
       );
 
-      const response = await request(app).get(`/api/file/${expiredToken}`);
+      const response = await request(app)
+        .get(`/api/file/${expiredToken}`)
+        .set("x-api-key", apiKey);
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
@@ -95,6 +137,7 @@ describe("Storage API Tests", () => {
     test("should upload temporary file", async () => {
       const response = await request(app)
         .post("/api/upload")
+        .set("x-api-key", apiKey)
         .attach("image", testImagePath);
 
       expect(response.status).toBe(200);
@@ -103,7 +146,9 @@ describe("Storage API Tests", () => {
     });
 
     test("should return 404 when accessing temp file through url endpoint", async () => {
-      const response = await request(app).get("/api/url/temp.jpg");
+      const response = await request(app)
+        .get("/api/url/temp.jpg")
+        .set("x-api-key", apiKey);
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
@@ -113,12 +158,15 @@ describe("Storage API Tests", () => {
     test("should access temp file immediately after upload", async () => {
       const uploadResponse = await request(app)
         .post("/api/upload")
+        .set("x-api-key", apiKey)
         .attach("image", testImagePath);
 
       expect(uploadResponse.status).toBe(200);
 
       const token = uploadResponse.body.url.split("/").pop();
-      const downloadResponse = await request(app).get(`/api/file/${token}`);
+      const downloadResponse = await request(app)
+        .get(`/api/file/${token}`)
+        .set("x-api-key", apiKey);
 
       expect(downloadResponse.status).toBe(200);
       expect(downloadResponse.headers["content-type"]).toMatch(/^image\//);
