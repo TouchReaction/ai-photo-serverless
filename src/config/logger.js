@@ -6,8 +6,11 @@ const path = require("path");
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.errors({ stack: true }),
-  winston.format.printf(({ timestamp, level, message, stack }) => {
-    return `${timestamp} [${level.toUpperCase()}]: ${message}${
+  winston.format.printf((info) => {
+    const { timestamp, level, message, stack } = info;
+    const msg =
+      typeof message === "object" ? JSON.stringify(message, null, 2) : message;
+    return `${timestamp} [${level.toUpperCase()}]: ${msg}${
       stack ? "\n" + stack : ""
     }`;
   })
