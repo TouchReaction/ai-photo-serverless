@@ -1,11 +1,13 @@
+const { logger } = require("./logger");
+
 class ConfigManager {
   static instance = null;
 
   constructor() {
     this.config = {
-      storageStrategy: "local", // 存储策略：'local' 或 'oss'
-      tempStorage: false, // 是否使用临时存储
-      urlExpiration: 3600, // URL过期时间（秒）
+      storageStrategy: process.env.STORAGE_STRATEGY, // 存储策略：'local' 或 'oss'
+      tempStorage: process.env.TEMP_STORAGE?.toUpperCase() === "TRUE", // 是否使用临时存储
+      urlExpiration: parseInt(process.env.EXPIRATION), // URL过期时间（秒）
     };
   }
 
@@ -22,6 +24,7 @@ class ConfigManager {
 
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
+    logger.info(this.config);
     return this.config;
   }
 }

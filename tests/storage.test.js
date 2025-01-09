@@ -6,9 +6,9 @@ const ConfigManager = require("../src/config/config");
 const jwt = require("jsonwebtoken");
 
 describe("Storage API Tests", () => {
-  const testFixturesDir = path.resolve(__dirname, "./fixtures");
+  const testFixturesDir = path.resolve("fixtures");
   const testImagePath = path.join(testFixturesDir, "test.jpg");
-  const uploadTestDir = path.resolve(__dirname, "../uploads/test");
+  const uploadsDir = path.resolve("uploads");
   const config = ConfigManager.getInstance();
 
   async function removeDir(dir) {
@@ -22,15 +22,16 @@ describe("Storage API Tests", () => {
   }
 
   beforeAll(async () => {
-    // 创建测试目录和文件
+    // 创建测试文件
+    await fs.mkdir(uploadsDir, { recursive: true });
     await fs.mkdir(testFixturesDir, { recursive: true });
     await fs.writeFile(testImagePath, "fake image content");
   });
 
   afterAll(async () => {
-    // 清理测试文件和目录
+    // 清理测试文件和上传目录
     await removeDir(testFixturesDir);
-    await removeDir(uploadTestDir);
+    await removeDir(uploadsDir);
   });
 
   beforeEach(() => {

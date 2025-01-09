@@ -50,6 +50,8 @@ const logger = winston.createLogger({
 const requestLogger = (req, res, next) => {
   const start = Date.now();
 
+  logger.info(req.originalUrl);
+
   res.on("finish", () => {
     const duration = Date.now() - start;
     logger.info({
