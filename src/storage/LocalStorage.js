@@ -3,6 +3,7 @@ const path = require("path");
 const fs = require("fs").promises;
 const jwt = require("jsonwebtoken");
 const ConfigManager = require("../config/config");
+const { logger } = require('../config/logger');
 
 class LocalStorage extends StorageInterface {
   constructor() {
@@ -24,30 +25,34 @@ class LocalStorage extends StorageInterface {
     const filename = isTemp ? 'temp.jpg' : `${Date.now()}-${file.originalname}`;
     const filepath = path.join(targetDir, filename);
     
-    if (isTemp) {
-      // 删除旧的临时文件
-      const files = await fs.readdir(this.tempDir);
-      for (const file of files) {
-        await fs.unlink(path.join(this.tempDir, file));
+    try {
+      if (isTemp) {
+        logger.info('Cleaning temporary storage directory');
+        const files = await fs.readdir(this.tempDir);
+        for (const file of files) {
+          await fs.unlink(path.join(this.tempDir, file));
+          logger.debug(`Deleted temp file: ${file}`);
+        }
       }
-    }
 
-    await fs.writeFile(filepath, file.buffer);
-    return filename;
+      await fs.writeFile(filepath, file.buffer);
+      logger.info(`File saved successfully: ${filename} (${isTemp ? 'temporary' : 'permanent'})`);
+      return filename;
+    } catch (error) {
+      logger.error(`Error saving file: ${error.message}`, { error });
+      throw error;
+    }
   }
 
   async getFileUrl(filename) {
-    const config = ConfigManager.getInstance();
-    const { urlExpiration = 3600 } = config.getConfig(); // 默认1小时
-
-    // 创建包含文件信息的token
-    const token = jwt.sign({
-      filename,
-      exp: Math.floor(Date.now() / 1000) + urlExpiration
-    }, this.jwtSecret);
-
-    // 返回带token的临时URL
-    return `/api/file/${token}`;
+    try {
+      const url = await super.getFileUrl(filename);
+      logger.info(`Generated URL for file: ${filename}`);
+      return url;
+    } catch (error) {
+      logger.error(`Error generating URL for file ${filename}: ${error.message}`);
+      throw error;
+    }
   }
 
   async verifyToken(token) {

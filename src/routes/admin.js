@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const StorageFactory = require("../storage/StorageFactory");
 const ConfigManager = require("../config/config");
+const { logger } = require('../config/logger');
 
 // 更改存储策略
 router.post("/storage/strategy", (req, res) => {
@@ -13,11 +14,14 @@ router.post("/storage/strategy", (req, res) => {
     const config = ConfigManager.getInstance();
     config.updateConfig({ storageStrategy: strategy });
 
+    logger.info(`Storage strategy changed to: ${strategy}`);
+
     res.json({
       success: true,
       message: `Storage strategy changed to ${strategy}`,
     });
   } catch (error) {
+    logger.error(`Error changing storage strategy: ${error.message}`);
     res.status(400).json({
       success: false,
       error: error.message,
