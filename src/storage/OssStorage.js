@@ -35,7 +35,11 @@ class OssStorage extends StorageInterface {
     const isTemp = this.getIsTemp();
     const path = isTemp ? this.tempPath : this.permanentPath;
     try {
-      const url = await this.client.generatePresignedUrl(`${path}${filename}`);
+      const config = ConfigManager.getInstance();
+      const { urlExpiration } = config.getConfig();
+      const url = this.client.signatureUrl(`${path}${filename}`, {
+        expires: urlExpiration,
+      });
       return url;
     } catch (error) {
       logger.error(`Error generating URL: ${error.message}`);
