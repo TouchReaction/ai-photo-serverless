@@ -1,13 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const StorageFactory = require("../storage/StorageFactory");
 const ConfigManager = require("../config/config");
 
 // 更改存储策略
 router.post("/storage/strategy", (req, res) => {
   try {
     const { strategy } = req.body;
-    StorageFactory.setStrategy(strategy);
     const config = ConfigManager.getInstance();
     config.updateConfig({ storageStrategy: strategy });
     res.json({

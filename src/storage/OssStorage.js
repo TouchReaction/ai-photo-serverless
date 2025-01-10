@@ -1,6 +1,7 @@
 const StorageInterface = require("./StorageInterface");
 const OSS = require("ali-oss");
 const { logger } = require("../config/logger");
+const ConfigManager = require("../config/config");
 
 class OssStorage extends StorageInterface {
   constructor() {
@@ -34,10 +35,12 @@ class OssStorage extends StorageInterface {
   async getFileUrl(filename) {
     const isTemp = this.getIsTemp();
     const path = isTemp ? this.tempPath : this.permanentPath;
+    const filepath = `${path}${filename}`;
     try {
       const config = ConfigManager.getInstance();
       const { urlExpiration } = config.getConfig();
-      const url = this.client.signatureUrl(`${path}${filename}`, {
+      await this.client.head(filepath);
+      const url = this.client.signatureUrl(filepath, {
         expires: urlExpiration,
       });
       return url;

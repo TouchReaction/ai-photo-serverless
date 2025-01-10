@@ -1,12 +1,15 @@
+const ConfigManager = require("../config/config");
 const LocalStorage = require("./LocalStorage");
 const OssStorage = require("./OssStorage");
 
 class StorageFactory {
   static instance = null;
-  static currentStrategy = "local"; // 默认使用本地存储
+  static currentStrategy; // 默认使用本地存储
 
   static getInstance() {
-    if (!this.instance) {
+    const { storageStrategy } = ConfigManager.getInstance().getConfig();
+    if (this.currentStrategy !== storageStrategy) {
+      this.currentStrategy = storageStrategy;
       this.instance = this.createStorage();
     }
     return this.instance;
