@@ -4,7 +4,12 @@ const adminRoutes = require("./routes/admin");
 const fileRoutes = require("./routes/file");
 const { logger, requestLogger } = require("./config/logger");
 const { apiKeyAuth } = require("./middleware/auth");
-const config = require("dotenv").config();
+
+// 只在非生产环境加载 .env 文件
+let config;
+if (process.env.NODE_ENV !== "production") {
+  config = require("dotenv").config();
+}
 
 const app = express();
 
@@ -32,7 +37,7 @@ app.use("/api/file", fileRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
-  logger.info(config.parsed);
+  if (config) logger.info(config.parsed);
 });
 
 // 处理未捕获的异常
