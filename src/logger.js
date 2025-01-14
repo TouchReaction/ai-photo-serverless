@@ -37,7 +37,7 @@ const logger = winston.createLogger({
 
     // 错误级别日志文件
     new DailyRotateFile({
-      filename: path.join(__dirname, "../../logs/error-%DATE%.log"),
+      filename: path.resolve("logs/error-%DATE%.log"),
       datePattern: "YYYY-MM-DD",
       level: "error",
       maxFiles: "30d",

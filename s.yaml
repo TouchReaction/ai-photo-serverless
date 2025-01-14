@@ -10,7 +10,8 @@ resources:
           path: ./
     props:
       region: cn-hangzhou
-      runtime: custom.debian10environmentVariables:
+      runtime: custom.debian10
+      environmentVariables:
         PATH: >-
           /opt/nodejs20/bin:/usr/local/bin/apache-maven/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ruby/bin
       layers:

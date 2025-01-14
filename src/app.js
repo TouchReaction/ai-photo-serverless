@@ -1,9 +1,5 @@
 const express = require("express");
-const uploadRoutes = require("./routes/upload");
-const adminRoutes = require("./routes/admin");
-const fileRoutes = require("./routes/file");
-const { logger, requestLogger } = require("./config/logger");
-const { apiKeyAuth } = require("./middleware/auth");
+const multer = require("multer");
 
 // 只在非生产环境加载 .env 文件
 let config;
@@ -11,28 +7,27 @@ if (process.env.NODE_ENV !== "production") {
   config = require("dotenv").config();
 }
 
+const { logger, requestLogger } = require("./logger");
+const RequestError = require("./RequestError");
+
 const app = express();
 
+app.use(express.json());
 // 添加请求日志中间件
 app.use(requestLogger);
 
+app.use("/", require("./upload"));
+
 // 错误处理中间件
 app.use((err, req, res, next) => {
-  logger.error("Unhandled error:", err);
-  res.status(500).json({
-    success: false,
-    error: "Internal server error",
-  });
+  if (err instanceof multer.MulterError || err instanceof RequestError) {
+    logger.error("Request error:", err);
+    res.status(400).json({ success: false, error: err.message });
+  } else {
+    logger.error("Unhandled error:", err);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
-
-app.use(express.json());
-
-// 添加API认证中间件
-app.use("/api", apiKeyAuth);
-
-app.use("/api", uploadRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/file", fileRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
