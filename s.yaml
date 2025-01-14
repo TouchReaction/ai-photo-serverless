@@ -12,6 +12,12 @@ resources:
       region: cn-hangzhou
       runtime: custom.debian10
       environmentVariables:
+        PORT: 9000
+        LOG_LEVEL: info
+        EXPIRE: 30s
+        ROOT_PATH: /mnt/oss
+        MAX_SIZE: 5
+        TITLE: 我和移动故事
         PATH: >-
           /opt/nodejs20/bin:/usr/local/bin/apache-maven/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ruby/bin
       layers:
