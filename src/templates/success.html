@@ -1,8 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
   <head>
+    <meta charset="UTF-8">
     <title>{{title}}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 移动端适配 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+    <meta name="format-detection" content="address=no">
+    <!-- iOS设备 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <!-- 微信分享 -->
+    <meta itemprop="name" content="{{title}}">
+    <meta itemprop="description" content="图片分享">
+    <meta itemprop="image" content="{{image}}">
+    <!-- 禁止转码 -->
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- QQ分享 -->
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
+    <!-- UC分享 -->
+    <meta name="full-screen" content="yes">
+    <meta name="browsermode" content="application">
+    <!-- 360分享 -->
+    <meta name="renderer" content="webkit">
     <style>
       * {
         margin: 0;
@@ -102,8 +124,47 @@
         }
       }
     </style>
+    <script>
+      // 禁止页面缩放
+      document.addEventListener('touchstart', function (event) {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+
+      // 禁止双击缩放
+      var lastTouchEnd = 0;
+      document.addEventListener('touchend', function (event) {
+        var now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+
+      // 微信内置浏览器中，阻止长按图片弹出菜单
+      document.addEventListener('contextmenu', function(e) {
+        if(typeof WeixinJSBridge !== 'undefined') {
+          e.preventDefault();
+        }
+      });
+
+      // 微信内图片长按保存
+      document.addEventListener('DOMContentLoaded', function() {
+        var img = document.querySelector('img');
+        if(typeof WeixinJSBridge !== 'undefined') {
+          img.addEventListener('longpress', function(e) {
+            e.preventDefault();
+            WeixinJSBridge.invoke('imagePreview', {
+              'urls': [img.src],
+              'current': img.src
+            });
+          });
+        }
+      });
+    </script>
   </head>
-  <body>
+  <body ontouchstart="">
     <div class="image-container">
       <img src="{{image}}" alt="Uploaded Image" />
     </div>

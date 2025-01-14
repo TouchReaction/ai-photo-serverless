@@ -58,7 +58,7 @@ async function getTemplate(type, params) {
   params.title = process.env.TITLE;
   const templatePath = path.join(__dirname, "templates", `${type}.html`);
   const content = await fs.readFile(templatePath, "utf8");
-  const replace = (data, [key, value]) => data.replace(`{{${key}}}`, value);
+  const replace = (data, [key, value]) => data.replaceAll(`{{${key}}}`, value);
   return Object.entries(params).reduce(replace, content);
 }
 
