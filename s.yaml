@@ -12,14 +12,19 @@ resources:
       region: cn-hangzhou
       runtime: custom.debian10
       environmentVariables:
-        PORT: 9000
+        PORT: '9000'
         LOG_LEVEL: info
-        EXPIRE: 30s
+        EXPIRE: 1m
         ROOT_PATH: /mnt/oss
-        MAX_SIZE: 5
+        MAX_SIZE: '5'
         TITLE: 我和移动故事
         PATH: >-
           /opt/nodejs20/bin:/usr/local/bin/apache-maven/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ruby/bin
+        JWT_SECRET: ZKfH_bv_Vdfpyz7pmnsgbHgttkKHKziDxofreqLG0b8
+      handler: handler
+      role: acs:ram::31738406:role/aliyunfcdefaultrole
+      description: ''
+      internetAccess: true
       layers:
         - acs:fc:cn-hangzhou:official:layers/Nodejs20/versions/1
       memorySize: 128
@@ -27,6 +32,14 @@ resources:
       timeout: 60
       code: ./
       diskSize: 512
+      instanceConcurrency: 1
+      ossMountConfig:
+        mountPoints:
+          - bucketName: ai-photo-oss
+            endpoint: http://oss-cn-hangzhou-internal.aliyuncs.com
+            bucketPath: /
+            mountDir: /mnt/oss
+            readOnly: false
       customRuntimeConfig:
         command:
           - npm
@@ -43,3 +56,6 @@ resources:
             methods:
               - GET
               - POST
+            disableURLInternet: false
+          qualifier: LATEST
+          description: ''
